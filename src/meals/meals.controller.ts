@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Param, Optional } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
 import { MealsService } from './meals.service';
+import { Prisma } from '@prisma/client';
 
 @Controller('meals')
 export class MealsController {
-  constructor(@Optional() private readonly mealsService?: MealsService) {}
+  constructor(private readonly mealsService: MealsService) {}
 
   @Post()
   async create(
@@ -13,19 +14,26 @@ export class MealsController {
       items: { foodId: string; quantityG: number }[];
     },
   ) {
-    if (!this.mealsService) return null;
     return this.mealsService.create(body.userId, body.items);
   }
 
   @Get('user/:userId')
   async findAll(@Param('userId') userId: string) {
-    if (!this.mealsService) return [];
     return this.mealsService.findAll(userId);
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    if (!this.mealsService) return null;
     return this.mealsService.findOne(id);
+  }
+
+  @Patch(':id')
+  async update(@Param('id') id: string, @Body() data: Prisma.MealUpdateInput) {
+    return this.mealsService.update(id, data);
+  }
+
+  @Delete(':id')
+  async remove(@Param('id') id: string) {
+    return this.mealsService.remove(id);
   }
 }

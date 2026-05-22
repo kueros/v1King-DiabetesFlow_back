@@ -1,11 +1,12 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Meal, Prisma } from '@prisma/client';
 
 @Injectable()
 export class MealsService {
   constructor(@Optional() private prisma?: PrismaService) {}
 
-  async create(userId: string, items: { foodId: string; quantityG: number }[]) {
+  async create(userId: string, items: { foodId: string; quantityG: number }[]): Promise<Meal | null> {
     if (!this.prisma) return null;
 
     return this.prisma.$transaction(async (tx) => {
@@ -45,7 +46,7 @@ export class MealsService {
     });
   }
 
-  async findAll(userId: string) {
+  async findAll(userId: string): Promise<Meal[]> {
     if (!this.prisma) return [];
     return this.prisma.meal.findMany({
       where: { userId },
@@ -54,11 +55,27 @@ export class MealsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<Meal | null> {
     if (!this.prisma) return null;
     return this.prisma.meal.findUnique({
       where: { id },
       include: { items: { include: { food: true } } },
+    });
+  }
+
+  async update(id: string, data: Prisma.MealUpdateInput): Promise<Meal | null> {
+    if (!this.prisma) return null;
+    return this.prisma.meal.update({
+      where: { id },
+      data,
+      include: { items: { include: { food: true } } },
+    });
+  }
+
+  async remove(id: string): Promise<Meal | null> {
+    if (!this.prisma) return null;
+    return this.prisma.meal.delete({
+      where: { id },
     });
   }
 }
