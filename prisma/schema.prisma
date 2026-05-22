@@ -1,0 +1,112 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+// ==========================================
+// 1. Usuarios y Configuración Personal
+// ==========================================
+model User {
+    id        String   @id @default(uuid())
+    email     String   @unique
+    createdAt DateTime @default(now())
+
+    settings        UserSettings?
+    ratios          UserRatio[]
+    glucoseLogs     GlucoseLog[]
+    insulinLogs     InsulinLog[]
+    meals           Meal[]
+    activities      Activity[]
+    dailyBiometrics DailyBiometric[]
+}
+
+model UserSettings {
+    userId    String  @id
+    user      User    @relation(fields: [userId], references: [id])
+    targetMin Int // Límite inferior del rango objetivo (ej. 70)
+    targetMax Int // Límite superior del rango objetivo (ej. 180)
+    isf       Decimal // Factor de Sensibilidad a la Insulina
+}
+
+model UserRatio {
+    id        String  @id @default(uuid())
+    userId    String
+    user      User    @relation(fields: [userId], references: [id])
+    startTime String // Hora de inicio (ej. "06:00")
+    icr       Decimal // Ratio Insulina/Carbohidrato para esta franja
+}
+
+// ==========================================
+// 2. Mediciones y Dosis
+// ==========================================
+model GlucoseLog {
+    id        String   @id @default(uuid())
+    userId    String
+    user      User     @relation(fields: [userId], references: [id])
+    level     Int // Nivel de glucosa en mg/dL
+    timestamp DateTime // Fecha y hora exacta de la medición
+    context   String // Ej: "Ayunas", "Post-prandial", "Antes de dormir"
+}
+
+model InsulinLog {
+    id        String   @id @default(uuid())
+    userId    String
+    user      User     @relation(fields: [userId], references: [id])
+    type      String // "Rápida" (Bolo) o "Lenta" (Basal)
+    units     Decimal // Unidades inyectadas
+    timestamp DateTime // Fecha y hora de la aplicación
+}
+
+// ==========================================
+// 3. Alimentación
+// ==========================================
+model Food {
+    id           String     @id @default(uuid())
+    name         String // Nombre del ingrediente
+    carbsPer100g Decimal // Carbohidratos por cada 100 gramos/ml
+    barcode      String? // (Opcional) Para integración con APIs
+    mealItems    MealItem[]
+}
+
+model Meal {
+    id         String     @id @default(uuid())
+    userId     String
+    user       User       @relation(fields: [userId], references: [id])
+    timestamp  DateTime   @default(now())
+    totalCarbs Decimal    @default(0) // Suma calculada total de los ingredientes
+    items      MealItem[]
+}
+
+model MealItem {
+    id        String  @id @default(uuid())
+    mealId    String
+    meal      Meal    @relation(fields: [mealId], references: [id])
+    foodId    String
+    food      Food    @relation(fields: [foodId], references: [id])
+    quantityG Decimal // Cantidad consumida en gramos/ml
+}
+
+// ==========================================
+// 4. Contexto y Biometría
+// ==========================================
+model Activity {
+    id          String   @id @default(uuid())
+    userId      String
+    user        User     @relation(fields: [userId], references: [id])
+    type        String // Ej: "Caminata", "Aeróbico", "Anaeróbico"
+    durationMin Int? // Opcional: Duración en minutos
+    steps       Int? // Opcional: Cantidad de pasos
+    timestamp   DateTime @default(now())
+}
+
+model DailyBiometric {
+    id          String   @id @default(uuid())
+    userId      String
+    user        User     @relation(fields: [userId], references: [id])
+    date        DateTime @db.Date // Fecha del registro
+    sleepHours  Decimal // Horas de sueño registradas
+    stressLevel Int // Escala del 1 al 5
+}

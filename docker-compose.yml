@@ -1,0 +1,15 @@
+services:
+  # --- Base de Datos para DiabetesFlow ---
+  db-diabetesflow:
+    image: postgres:15
+    container_name: db-diabetesflow
+    restart: always
+    ports:
+      - "${DIABETESFLOW_DB_PORT}:5432"
+    environment:
+      POSTGRES_USER: ${DIABETESFLOW_DB_USER}
+      POSTGRES_PASSWORD: ${DIABETESFLOW_DB_PASSWORD}
+      POSTGRES_DB: ${DIABETESFLOW_DB_NAME}
+    volumes:
+      # Cambiamos la ruta para que no pise los datos de "core"
+      - ./postgres-data/diabetesflow:/var/lib/postgresql/data
