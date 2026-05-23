@@ -110,3 +110,12 @@ model DailyBiometric {
     sleepHours  Decimal // Horas de sueño registradas
     stressLevel Int // Escala del 1 al 5
 }
+
+model Settings {
+    id            String   @id @default(cuid())
+    userId        String   @unique
+  insulinSensitivity Decimal  @map("insulin_sensitivity")
+  carbRatio          Decimal  @map("carb_ratio")
+  targetGlucose      Decimal  @map("target_glucose")
+  updatedAt          DateTime @updatedAt
+  }
